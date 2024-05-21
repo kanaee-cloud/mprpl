@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ujian Praktek</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main class="container" id="app">
+      <div class="content">
+        <div class="header">
+          <h1>Ewok Store</h1>
+          <img
+            src="https://i.pinimg.com/736x/6c/b1/86/6cb186b75dc6d7ab9dda7c167453cd39.jpg"
+            alt=""
+            width="50"
+            height="50"
+          />
+        </div>
+        <div class="field">
+          <div class="inputan">
+            <div class="inputForm">
+              <label for="nota">No Nota :</label>
+              <input type="text" />
+            </div>
+            <div class="inputForm">
+              <label for="pelanggan">Pelanggan :</label>
+              <input type="text" />
+            </div>
+            <div class="inputForm">
+              <label for="nota">Tanggal :</label>
+              <input type="date" />
+            </div>
+          </div>
+
+          <div class="total">
+            <h4>Total Harga</h4>
+            <span v-if="totalKeseluruhan > 0">{{ totalKeseluruhan }}</span>
+            <span v-else>Mohon membeli barang terlebih dahulu</span>
+          </div>
+        </div>
+        <div class="barang" v-for>
+          <label for="namabarang">ID Barang</label>
+          <input type="text" v-model="itemDipilih.id" disabled />
+
+          <label for="kodebarang">Nama Barang</label>
+          <select v-model="itemDipilih">
+            <option v-for="item in barang" :value="item">
+              {{ item.name }}
+            </option>
+          </select>
+
+          <label for="quantity">Quantity</label>
+          <input type="number" v-model.number="quantity" class="diskon" />
+        </div>
+
+        <button @click="tambahItem">Tambah</button>
+
+        <table border="1">
+          <tr>
+            <td>ID barang</td>
+            <td>Nama Barang</td>
+            <td>Harga Satuan</td>
+            <td>Qty</td>
+            <td>Jumlah</td>
+            <td>Opsi</td>
+          </tr>
+          <tr v-for="(item, index) in tabelItem" :key="index">
+            <td>{{ item.id }}</td>
+            <td>{{ item.name }}</td>
+            <td>{{ item.price }}</td>
+            <td>{{ item.qty }}</td>
+            <td>{{ item.price * item.qty }}</td>
+            <td><button @click="hapusItem">Hapus</button></td>
+          </tr>
+        </table>
+      </div>
+      <div class="transaksi">
+        <div class="harga">
+            <div class="inputForm">
+              <label for="">Subtotal :</label>
+              <span>{{ subtotal }}</span>
+            </div>
+            <div class="inputForm">
+              <label for="">Diskon :</label>
+              <input type="text" class="diskon" v-model="discount"> %
+              = <input type="text" v-model="totalSetelahDiskon">
+            </div>
+            <div class="inputForm">
+              <label for="">Total Harga :</label>
+              <input type="text" v-model="totalSetelahDiskon">
+            </div>
+          </div>
+          <div class="bayar">
+            <div class="inputForm">
+              <label for="">Bayar :</label>
+              <input type="text" v-model.number="pay">
+            </div>
+            <div class="inputForm">
+              <label for="">Kembalian :</label>
+              <input type="text" v-model="kembalian">
+            </div>
+            <button @click="konfirmasiPesanan">Selesai</button>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      new Vue({
+        el: "#app",
+        data: {
+          barang: [
+            {
+              id: 10101,
+              name: "Shampoo",
+              price: 20000,
+            },
+            {
+              id: 20202,
+              name: "Soap",
+              price: 10000,
+            },
+          ],
+          itemDipilih: {
+            id: "",
+            name: "",
+            price: 0,
+          },
+          quantity: 0,
+          tabelItem: [],
+          discount: 0,
+          pay: 0,
+        },
+        computed: {
+          totalSemua() {
+            return this.tabelItem.reduce(
+              (sum, item) => sum + item.price * item.qty,
+              0
+            );
+          },
+          subtotal() {
+            return this.totalSemua;
+          },
+          totalSetelahDiskon() {
+            return this.subtotal - this.subtotal * (this.discount / 100);
+          },
+          kembalian() {
+            return this.pay - this.totalSetelahDiskon;
+          },
+          totalKeseluruhan(){
+            return this.totalSemua;
+          }
+        },
+        methods: {
+          tambahItem() {
+            if (this.itemDipilih && this.quantity > 0) {
+              this.tabelItem.push({ ...this.itemDipilih, qty: this.quantity });
+              this.itemDipilih = { id: "", name: "", price: 0 };
+              this.quantity = 1;
+            }
+          },
+
+          hapusItem(index) {
+            this.tabelItem.splice(index, 1);
+          },
+          konfirmasiPesanan(){
+            const swalWithBootstrapButtons = Swal.mixin({
+  customClass: {
+    confirmButton: "btn btn-success",
+    cancelButton: "btn btn-danger"
+  },
+  buttonsStyling: false
+});
+swalWithBootstrapButtons.fire({
+  title: "Are you sure?",
+  text: "You won't be able to revert this!",
+  icon: "warning",
+  showCancelButton: true,
+  confirmButtonText: "Yes, delete it!",
+  cancelButtonText: "No, cancel!",
+  reverseButtons: true
+}).then((result) => {
+  if (result.isConfirmed) {
+    swalWithBootstrapButtons.fire({
+      title: "Deleted!",
+      text: "Your file has been deleted.",
+      icon: "success"
+    });
+  } else if (
+    /* Read more about handling dismissals below */
+    result.dismiss === Swal.DismissReason.cancel
+  ) {
+    swalWithBootstrapButtons.fire({
+      title: "Cancelled",
+      text: "Your imaginary file is safe :)",
+      icon: "error"
+    });
+  }
+});
+          }
+        },
+      });
+    </script>
+  </body>
+</html>
